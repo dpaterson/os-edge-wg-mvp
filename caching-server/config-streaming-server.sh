@@ -1,4 +1,9 @@
 #!/bin/sh
+echo "Fix hosts file, not sure why host is not set by cloud-init..."
+sed -i "1s/^/127.0.0.1 `sudo -Hu ubuntu hostname`\n/" /etc/hosts
+
+echo "Hosts file updated, hostname: `hostname`"
+
 IS_NETWORKING_ACTIVE=false
 [ "`systemctl is-active networking`" != "active" ] || IS_NETWORKING_ACTIVE=true
 while ! $IS_NETWORKING_ACTIVE; do
@@ -15,13 +20,15 @@ usermod --password $(openssl passwd -1 squ\!d) ubuntu
 sed -i "s/^.*PasswordAuthentication no/PasswordAuthentication yes/" /etc/ssh/sshd_config
 systemctl restart sshd
 
-sleep 30
+
 # install gnome and have it come up on boot.
 echo "Update all packages"
 apt-get update
 apt-get upgrade
 echo "Install and configure squid."
 apt-get install -y squid
+echo "Stopping squid"
+systemctl stop squid
 echo "Backing up original squid.conf."
 cp /etc/squid/squid.conf /etc/squid/squid.conf.orig
 echo "Clear existing squid.conf"
@@ -74,6 +81,20 @@ refresh_pattern .png            120     50%     86400 ignore-reload
 # This forces all content to be cached for 2 minutes at least:
 refresh_pattern .               120       20%     4320
 EOF
-systemctl restart squid
+
+cat > /etc/squid/ban_domains.txt <<EOFBAD
+ubuntu@squid-xenial-1:~$ sudo cat /etc/squid/ban_domains.txt
+www.360zuqiu.com
+360
+yabo03.in
+EOFBAD
+
+cat > /etc/squid/allow_domains.txt <<EOFALLOW
+ubuntu@squid-xenial-1:~$ sudo cat /etc/squid/ban_domains.txt
+commondatastorage.googleapis.com
+detectportal.firefox.com
+mozilla.github.io
+EOFALLOW
+systemctl start squid
 
 echo "Done, squid http caching should be enabled..."

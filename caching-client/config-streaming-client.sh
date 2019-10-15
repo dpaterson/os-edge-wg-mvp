@@ -1,4 +1,8 @@
 #!/bin/sh
+
+SQUID_IP=139.178.84.189
+SQUID_PORT=3128
+
 IS_NM_ACTIVE=false
 [ "`systemctl is-active NetworkManager`" != "active" ] || IS_NM_ACTIVE=true
 while ! $IS_NM_ACTIVE; do
@@ -58,15 +62,15 @@ sudo -Hu fedora dbus-launch gsettings set org.gnome.system.proxy autoconfig-url 
 sudo -Hu fedora dbus-launch gsettings set org.gnome.system.proxy.http use-authentication false
 sudo -Hu fedora dbus-launch gsettings set org.gnome.system.proxy.http enabled false
 sudo -Hu fedora dbus-launch gsettings set org.gnome.system.proxy.http authentication-password ''
-sudo -Hu fedora dbus-launch gsettings set org.gnome.system.proxy.http port 3128
-sudo -Hu fedora dbus-launch gsettings set org.gnome.system.proxy.http host '139.178.84.190'
+sudo -Hu fedora dbus-launch gsettings set org.gnome.system.proxy.http port $SQUID_PORT
+sudo -Hu fedora dbus-launch gsettings set org.gnome.system.proxy.http host "$SQUID_IP"
 sudo -Hu fedora dbus-launch gsettings set org.gnome.system.proxy.http authentication-user ''
-sudo -Hu fedora dbus-launch gsettings set org.gnome.system.proxy.https port 3128
-sudo -Hu fedora dbus-launch gsettings set org.gnome.system.proxy.https host '139.178.84.190'
-sudo -Hu fedora dbus-launch gsettings set org.gnome.system.proxy.ftp port 3128
-sudo -Hu fedora dbus-launch gsettings set org.gnome.system.proxy.ftp host '139.178.84.190'
-sudo -Hu fedora dbus-launch gsettings set org.gnome.system.proxy.socks port 3128
-sudo -Hu fedora dbus-launch gsettings set org.gnome.system.proxy.socks host '139.178.84.190'
+sudo -Hu fedora dbus-launch gsettings set org.gnome.system.proxy.https port $SQUID_PORT
+sudo -Hu fedora dbus-launch gsettings set org.gnome.system.proxy.https host "$SQUID_IP"
+sudo -Hu fedora dbus-launch gsettings set org.gnome.system.proxy.ftp port $SQUID_PORT
+sudo -Hu fedora dbus-launch gsettings set org.gnome.system.proxy.ftp host "$SQUID_IP"
+sudo -Hu fedora dbus-launch gsettings set org.gnome.system.proxy.socks port $SQUID_PORT
+sudo -Hu fedora dbus-launch gsettings set org.gnome.system.proxy.socks host "$SQUID_IP"
 
 echo "Setting gnome attributes for vnc access and screen lock timeout."
 sudo -Hu fedora dbus-launch gsettings set org.gnome.Vino vnc-password $(echo -n f3d0r@! | base64)
