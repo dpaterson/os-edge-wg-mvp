@@ -1,32 +1,33 @@
 #!/bin/sh
-IS_NM_ACTIVE=false
-[ "`sudo systemctl is-active NetworkManager`" != "active" ] || IS_NM_ACTIVE=true
-while ! $IS_NM_ACTIVE; do
-    echo "NetworkManager is not active, sleep...."
+IS_NETWORKING_ACTIVE=false
+[ "`systemctl is-active networking`" != "active" ] || IS_NETWORKING_ACTIVE=true
+while ! $IS_NETWORKING_ACTIVE; do
+    echo "networking.service is not active, sleep...."
     sleep 30
-    [ "`sudo systemctl is-active NetworkManager`" != "active" ] || IS_NM_ACTIVE=true
+    [ "`systemctl is-active networking`" != "active" ] || IS_NETWORKING_ACTIVE=true
 done
 
-echo "NetworkManager is now active, continue configuration."
+echo "networking.service is now active, continue configuration."
 echo "Change default user password and turn on password ssh auth."
 # set default fedora user password
-sudo usermod --password $(openssl passwd -1 squ\!d) ubuntu
+usermod --password $(openssl passwd -1 squ\!d) ubuntu
 # turn on password auth
-sudo sed -i "s/^.*PasswordAuthentication no/PasswordAuthentication yes/" /etc/ssh/sshd_config
-sudo systemctl restart sshd
+sed -i "s/^.*PasswordAuthentication no/PasswordAuthentication yes/" /etc/ssh/sshd_config
+systemctl restart sshd
 
 sleep 30
 # install gnome and have it come up on boot.
 echo "Update all packages"
-sudo apt-get update
-sudo apt-get upgrade
+apt-get update
+apt-get upgrade
 echo "Install and configure squid."
-sudo apt-get install -y squid
-sudo cp /etc/squid/squid.conf /etc/squid/squid.conf.orig
+apt-get install -y squid
+echo "Backing up original squid.conf."
+cp /etc/squid/squid.conf /etc/squid/squid.conf.orig
 echo "Clear existing squid.conf"
-sudo sed -i '1,$d' /etc/squid/squid.conf
+sed -i '1,$d' /etc/squid/squid.conf
 echo "Writing new squid.conf"
-sudo cat > /etc/squid/squid.conf <<EOF
+cat > /etc/squid/squid.conf <<EOF
 coredump_dir /var/spool/squid
 # dp - set to 20 mb, if we only care about big stuff
 # minimum_object_size 20971520
@@ -73,6 +74,6 @@ refresh_pattern .png            120     50%     86400 ignore-reload
 # This forces all content to be cached for 2 minutes at least:
 refresh_pattern .               120       20%     4320
 EOF
-sudo systemctl restart squid
+systemctl restart squid
 
 echo "Done, squid http caching should be enabled..."
